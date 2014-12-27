@@ -9,11 +9,10 @@ import java.util.LinkedList
 import java.util.Map
 import java.util.HashMap
 
-import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 class NfcReaderFactory {
-	
+
 	val TerminalFactory factory = TerminalFactory.getDefault();
 	val Map<String, NfcReaderService> terminals = new HashMap<String, NfcReaderService>()
 
@@ -57,6 +56,10 @@ class NfcReaderFactory {
 			callbacks.add(nc)
 		}
 
+		def getCardTerminal() {
+			return terminal
+		}
+
 		new(CardTerminal _terminal) {
 			terminal = _terminal
 		}
@@ -77,16 +80,32 @@ class NfcReaderFactory {
 				new Runnable {
 					override run() {
 						while(!stopped) {
+							LOGGER.info("waitForCardPresent")
 							if(terminal.waitForCardPresent(500)) {
+								var Card card = null
+								var CardChannel channel = null
+								LOGGER.info("CardPresent")
 								try {
-									val Card card = terminal.connect("*")
-									val CardChannel channel = card.getBasicChannel()
-									callbacks.forEach[cb|cb.call(card, channel)]
+									card = terminal.connect("*")
+									val _card = card
+									LOGGER.info("Card: " + card)
+									LOGGER.info("Card:ATR:" + Main.asString(card.ATR.bytes))
+									channel = card.getBasicChannel()
+									val _channel = channel
+									LOGGER.info("CardChannel:" + channel)
+									callbacks.forEach[cb|cb.call(_card, _channel)]
+									card.disconnect(false)
+
+								//terminal.
 								} catch(Exception e) {
 									LOGGER.error("Card:", e)
 								}
+								LOGGER.info("waitForCardAbsent")
 								while(!stopped && !terminal.waitForCardAbsent(500)) {
 								}
+								LOGGER.info("CardAbsent")
+								//channel.close
+								card.disconnect(false)
 							}
 						}
 					}
