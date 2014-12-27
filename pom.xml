@@ -77,7 +77,7 @@
               <transformers>
                 <transformer
                   implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                  <mainClass>com.adviser.yuul.Main</mainClass>
+                  <mainClass>com.adviser.yuul.Yuul</mainClass>
                 </transformer>
                 <transformer
                   implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">

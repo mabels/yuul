@@ -13,7 +13,7 @@ import org.slf4j.LoggerFactory
 
 class NfcReaderFactory {
 
-	val TerminalFactory factory = TerminalFactory.getDefault();
+	val TerminalFactory factory = TerminalFactory.getDefault()
 	val Map<String, NfcReaderService> terminals = new HashMap<String, NfcReaderService>()
 
 	def getService() {
@@ -21,29 +21,29 @@ class NfcReaderFactory {
 	}
 
 	def getService(String readername) {
-		var NfcReaderService nrs = terminals.get(readername);
+		var NfcReaderService nrs = terminals.get(readername)
 		if(nrs != null) {
-			return nrs;
+			return nrs
 		}
 		var CardTerminal ct = null
 		val list = factory.terminals().list()
 		if(readername == null && list.size() > 0) {
-			ct = list.get(0);
+			ct = list.get(0)
 		} else {
 			ct = factory.terminals().list().findFirst[i|readername.equals(i.name)]
 		}
 		if(ct == null) {
-			return null;
+			return null
 		}
-		nrs = new NfcReaderService(ct);
-		terminals.put(nrs.getName, nrs);
+		nrs = new NfcReaderService(ct)
+		terminals.put(nrs.getName, nrs)
 		nrs
 	}
 
 	static class NfcReaderService {
-		static val LOGGER = LoggerFactory.getLogger(NfcReaderService);
+		static val LOGGER = LoggerFactory.getLogger(NfcReaderService)
 		val CardTerminal terminal
-		var Thread thread;
+		var Thread thread
 		var boolean stopped = false
 
 		static abstract class NfcCallback {
@@ -80,19 +80,19 @@ class NfcReaderFactory {
 				new Runnable {
 					override run() {
 						while(!stopped) {
-							LOGGER.info("waitForCardPresent")
+							LOGGER.debug("waitForCardPresent")
 							if(terminal.waitForCardPresent(500)) {
 								var Card card = null
 								var CardChannel channel = null
-								LOGGER.info("CardPresent")
+								LOGGER.debug("CardPresent")
 								try {
 									card = terminal.connect("*")
 									val _card = card
-									LOGGER.info("Card: " + card)
-									LOGGER.info("Card:ATR:" + Main.asString(card.ATR.bytes))
+									LOGGER.debug("Card: " + card)
+									LOGGER.debug("Card:ATR:" + Yuul.asString(card.ATR.bytes))
 									channel = card.getBasicChannel()
 									val _channel = channel
-									LOGGER.info("CardChannel:" + channel)
+									LOGGER.debug("CardChannel:" + channel)
 									callbacks.forEach[cb|cb.call(_card, _channel)]
 									card.disconnect(false)
 
@@ -100,10 +100,10 @@ class NfcReaderFactory {
 								} catch(Exception e) {
 									LOGGER.error("Card:", e)
 								}
-								LOGGER.info("waitForCardAbsent")
+								LOGGER.debug("waitForCardAbsent")
 								while(!stopped && !terminal.waitForCardAbsent(500)) {
 								}
-								LOGGER.info("CardAbsent")
+								LOGGER.debug("CardAbsent")
 								//channel.close
 								card.disconnect(false)
 							}

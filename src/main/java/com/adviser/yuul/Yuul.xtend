@@ -3,7 +3,7 @@ package com.adviser.yuul
 import com.adviser.yuul.NfcReaderFactory.NfcReaderService
 import com.adviser.yuul.NfcReaderFactory.NfcReaderService.NfcCallback
 
-import org.slf4j.LoggerFactory
+import org.slf4j.LoggerFactory 
 
 import org.yaml.snakeyaml.Yaml
 import java.util.Map
@@ -11,24 +11,25 @@ import java.io.FileInputStream
 import java.io.File
 import java.io.ByteArrayOutputStream
 import java.io.PrintStream
+import ch.qos.logback.core.util.StatusPrinter
 
-
-class Main {
-	static val LOGGER = LoggerFactory.getLogger(Main);
+class Yuul {
+	static val LOGGER = LoggerFactory.getLogger(Yuul)
 
 	def static void main(String[] args) {
 		LOGGER.info("Starting Yuul")
-		
+    val context = LoggerFactory.getILoggerFactory
+
 		val yaml = new Yaml()
-		val input = new FileInputStream(new File("yuul.yam"));	
+		val input = new FileInputStream(new File("yuul.yam"))
 		val Map<String, Object> yuul = yaml.load(input) as Map<String, Object>
-		
+
 		val processOtp = new ProcessOtp(yuul)
 		processOtp.start
-		
+
 		val nrf = new NfcReaderFactory
 		var NfcReaderService nrs
-		if(args.length > 0) {
+		if (args.length > 0) {
 			nrs = nrf.getService(args.last)
 		} else {
 			nrs = nrf.getService()
@@ -40,11 +41,11 @@ class Main {
 		LOGGER.info(nrs.cardTerminal.toString)
 		nrs.addCallback(new ReadYubiKeyOtp(processOtp.otpQeuue))
 		nrs.start()
-		while(true) {
-			Thread.sleep(3600000);
+		while (true) {
+			Thread.sleep(3600000)
 		}
 	}
-	
+
 	def static byte[] asBytes(int[] in) {
 		val my = new ByteArrayOutputStream
 		in.forEach[i|my.write(i)]
@@ -61,4 +62,5 @@ class Main {
 		in.forEach[i|out.printf("%02x ", i)]
 		return boas.toString()
 	}
+
 }

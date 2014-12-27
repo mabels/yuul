@@ -17,7 +17,7 @@ import java.util.regex.Pattern
 import javax.naming.directory.DirContext
 
 class ProcessOtp {
-	static val LOGGER = LoggerFactory.getLogger(ProcessOtp);
+	static val LOGGER = LoggerFactory.getLogger(ProcessOtp)
 
 	val Map<String, Object> yuul
 	val Thread my
@@ -59,14 +59,15 @@ class ProcessOtp {
 		}
 		val maps = #{"key" -> keyId }
 		val search = ProcessOtp.substitutor(yuul.get("ldapSearch") as String, maps)
-		LOGGER.info("ldapBaseDn:"+baseDn+" key:"+keyId+" ldapSearch:"+search)
+		LOGGER.debug("ldapBaseDn:"+baseDn+" key:"+keyId+" ldapSearch:"+search)
 		val results = ldapCtx.search(baseDn, search, controls)
 		while (results.hasMore()) {
-			val searchResult = results.next();
-			val attributes = searchResult.getAttributes();
-			LOGGER.info(
-				" Person Common Name = " + attributes.get("cn") + " Person Display Name = " +
-					attributes.get("displayName") + " Person MemberOf = " + attributes.get("memberOf"))
+			val searchResult = results.next()
+			val attributes = searchResult.getAttributes()
+			LOGGER.debug(
+				" Person Common Name = " + attributes.get("cn") + 
+				" Person Display Name = " + attributes.get("displayName") + 
+				" Person MemberOf = " + attributes.get("memberOf"))
 			return true
 		}
 		return false
@@ -78,10 +79,10 @@ class ProcessOtp {
 				while (!stopped) {
 					val otp = otpQueue.poll(500, TimeUnit.MILLISECONDS)
 					if (otp != null) {
-						LOGGER.info("Start Process of OTP:" + otp)
+						LOGGER.debug("Start Process of OTP:" + otp)
 						try {
 							val clientId = yuul.get("ClientId") as Integer
-							LOGGER.info("Using YubiKey.ClientID:" + clientId)
+							LOGGER.debug("Using YubiKey.ClientID:" + clientId)
 
 							val client = YubicoClient.getClient(clientId)
 							val response = client.verify(otp)
@@ -91,11 +92,11 @@ class ProcessOtp {
 									"yubico clientId(" + clientId + ") = key(" + key + ") otp(" + otp + ")=>" +
 										response.getStatus())
 							} else {
-								LOGGER.info("yubico clientId(" + clientId + ") = key(" + key + ") otp(" + otp + ")=> OK")
+								LOGGER.debug("yubico clientId(" + clientId + ") = key(" + key + ") otp(" + otp + ")=> OK")
 								if (verifyLdap(key)) {
-									LOGGER.info("key found in ldap grant access")
+									LOGGER.info("key "+key+" found in ldap grant access")
 								} else {
-									LOGGER.info("key not found in ldap deny access")
+									LOGGER.info("key "+key+" not found in ldap deny access")
 								}
 							}
 						} catch (Exception e) {
@@ -108,19 +109,19 @@ class ProcessOtp {
 	}
 
 	def start() {
-		val env = new Hashtable();
+		val env = new Hashtable()
 		env.put(Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.ldap.LdapCtxFactory")
 		env.put(Context.PROVIDER_URL, yuul.get("ldapUrl"))
 		env.put(Context.SECURITY_AUTHENTICATION, yuul.get("ldapSecurity"))
-		LOGGER.info("ldapConnection:" + yuul.get("ldapUrl") + " ldapSecurityMethod:" + yuul.get("ldapSecurity"))
+		LOGGER.debug("ldapConnection:" + yuul.get("ldapUrl") + " ldapSecurityMethod:" + yuul.get("ldapSecurity"))
 		val bindUser = yuul.get("ldapBindUser") as String
 		val bindPassword = yuul.get("ldapBindPassword") as String
 		if (bindUser != null && bindPassword != null) {
 			env.put(Context.SECURITY_PRINCIPAL, bindUser)
 			env.put(Context.SECURITY_CREDENTIALS, bindPassword)
-			LOGGER.info("ldapBindUser:" + bindUser + " ldapBindPassword:" + bindPassword)
+			LOGGER.debug("ldapBindUser:" + bindUser + " ldapBindPassword:" + bindPassword)
 		}
-		ldapCtx = new InitialDirContext(env);
+		ldapCtx = new InitialDirContext(env)
 		if (!my.alive) {
 			my.start()
 		}

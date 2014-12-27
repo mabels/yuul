@@ -10,7 +10,7 @@ import org.slf4j.LoggerFactory
 import com.adviser.yuul.NfcReaderFactory.NfcReaderService.NfcCallback
 
 class ReadYubiKeyOtp extends NfcCallback {
-	static val LOGGER = LoggerFactory.getLogger(ReadYubiKeyOtp);
+	static val LOGGER = LoggerFactory.getLogger(ReadYubiKeyOtp)
 
 	val Queue<String> otpQueue
 
@@ -68,10 +68,10 @@ class ReadYubiKeyOtp extends NfcCallback {
 
 
 	def ResponseAPDU transmit(CardChannel cc, SimpleExcept se) {
-		LOGGER.info("Send>>" + Main.asString(se.send))
-		val data = Main.asBytes(se.send)
-		val answer = cc.transmit(new CommandAPDU(data));
-		LOGGER.info("Recv<<" + Main.asString(answer.bytes))
+		LOGGER.debug("Send>>" + Yuul.asString(se.send))
+		val data = Yuul.asBytes(se.send)
+		val answer = cc.transmit(new CommandAPDU(data))
+		LOGGER.debug("Recv<<" + Yuul.asString(answer.bytes))
 		answer
 	}
 
@@ -79,7 +79,7 @@ class ReadYubiKeyOtp extends NfcCallback {
 		cmds.forEach [ cmd |
 			val ret = transmit(cc, cmd)
 			if(!cmd.respond(ret)) {
-				LOGGER.error("can not process APDU=" + Main.asString(cmd.send))
+				LOGGER.error("can not process APDU=" + Yuul.asString(cmd.send))
 				return
 			}
 		]
