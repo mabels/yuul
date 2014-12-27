@@ -14,3 +14,17 @@ oracle-java-8 on raspberry nada
 
 oracle-java-8 on macos 10.10 works
 oracle-java-7 on macos 10.10 nada
+
+---
+
+the configuration file should named yuul.yam and contain this
+
+```
+ClientId: [you need a key from https://upgrade.yubico.com/getapikey/]
+ldapUrl: ldap://192.168.178.37/
+ldapSecurity: simple
+ldapBindUser:
+ldapBindPassword:
+ldapBaseDn: dc=nodomain
+ldapSearch: (&(objectclass=person)(loginShell={key}))
+```
