@@ -10,6 +10,7 @@ class StateProcessOtp implements State {
 
 	override execute(NfcReaderService nrs) {
 		val transaction = new OtpTransaction
+		stateContext.reset()
 		transaction.add("CardPresent")
 		stateContext.setCard(stateContext.cardTerminal.connect("*"))
 		transaction.add("Card: " + stateContext.card + 

@@ -1,17 +1,18 @@
 package com.adviser.yuul
 
-import javax.smartcardio.TerminalFactory
-import javax.smartcardio.CardTerminal
 import javax.smartcardio.Card
-import org.slf4j.LoggerFactory
+import javax.smartcardio.CardTerminal
+import javax.smartcardio.TerminalFactory
 
 class StateContext {
 	
-	static val LOGGER = LoggerFactory.getLogger(StateContext)
+	//static val LOGGER = LoggerFactory.getLogger(StateContext)
 	
 	val TerminalFactory terminalFactory = TerminalFactory.getDefault()
 	var Card card
 	val String readerName
+	var boolean absent = true
+	var boolean present = true
 
 	new(String _readerName) {
 		readerName = _readerName
@@ -24,6 +25,27 @@ class StateContext {
 	def TerminalFactory getTerminalFactory() {
 		terminalFactory
 	}
+	
+	def reset() {
+		absent = present = true
+	}
+	
+	def resetAbsent() {
+		if (absent) {
+			absent = false
+			return true
+		}
+		return false
+	}
+
+	def resetPresent() {
+		if (present) {
+			present = false
+			return true
+		}
+		return false
+	}
+
 
 	def CardTerminal getCardTerminal() {
 		val list = terminalFactory.terminals().list()

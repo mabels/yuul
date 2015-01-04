@@ -13,7 +13,9 @@ class StateWaitForCardAbsence implements State {
 	}
 	
 	override execute(NfcReaderService nrs) {
-		LOGGER.debug("waitForCardAbsent")
+		if (stateContext.resetAbsent()) {
+			LOGGER.debug("waitForCardAbsent")
+		}
 		if (!stateContext.cardTerminal.waitForCardAbsent(500)) {
 			return this
 		}
