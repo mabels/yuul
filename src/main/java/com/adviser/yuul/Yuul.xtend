@@ -1,8 +1,5 @@
 package com.adviser.yuul
 
-import com.adviser.yuul.NfcReaderFactory.NfcReaderService
-import com.adviser.yuul.NfcReaderFactory.NfcReaderService.NfcCallback
-
 import org.slf4j.LoggerFactory 
 
 import org.yaml.snakeyaml.Yaml
@@ -11,15 +8,13 @@ import java.io.FileInputStream
 import java.io.File
 import java.io.ByteArrayOutputStream
 import java.io.PrintStream
-import ch.qos.logback.core.util.StatusPrinter
 
 class Yuul {
 	static val LOGGER = LoggerFactory.getLogger(Yuul)
 
 	def static void main(String[] args) {
 		LOGGER.info("Starting Yuul")
-    val context = LoggerFactory.getILoggerFactory
-
+    	
 		val yaml = new Yaml()
 		val input = new FileInputStream(new File("yuul.yam"))
 		val Map<String, Object> yuul = yaml.load(input) as Map<String, Object>
@@ -27,18 +22,15 @@ class Yuul {
 		val processOtp = new ProcessOtp(yuul)
 		processOtp.start
 
-		val nrf = new NfcReaderFactory
-		var NfcReaderService nrs
+		var String readerName = null
 		if (args.length > 0) {
-			nrs = nrf.getService(args.last)
-		} else {
-			nrs = nrf.getService()
+			readerName = args.last
 		}
+		var nrs = new NfcReaderService(readerName)
 		if (nrs == null) {
 			LOGGER.error("no reader found")
 			return
 		}
-		LOGGER.info(nrs.cardTerminal.toString)
 		nrs.addCallback(new ReadYubiKeyOtp(processOtp.otpQeuue))
 		nrs.start()
 		while (true) {

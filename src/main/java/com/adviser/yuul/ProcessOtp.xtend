@@ -22,7 +22,7 @@ class ProcessOtp {
 	val Map<String, Object> yuul
 	val Thread my
 	var boolean stopped = false
-	val otpQueue = new LinkedBlockingQueue<String>()
+	val otpQueue = new LinkedBlockingQueue<OtpTransaction>()
 	var DirContext ldapCtx = null
 
 	new(Map<String, Object> _yuul) {
@@ -30,7 +30,7 @@ class ProcessOtp {
 		my = new Thread(processor)
 	}
 
-	def Queue<String> getOtpQeuue() {
+	def Queue<OtpTransaction> getOtpQeuue() {
 		return otpQueue
 	}
 
@@ -77,22 +77,22 @@ class ProcessOtp {
 		return new Runnable() {
 			override def void run() {
 				while (!stopped) {
-					val otp = otpQueue.poll(500, TimeUnit.MILLISECONDS)
-					if (otp != null) {
-						LOGGER.debug("Start Process of OTP:" + otp)
+					val entry = otpQueue.poll(500, TimeUnit.MILLISECONDS)
+					if (entry != null) {
+						LOGGER.debug("Start Process of OTP:" + entry)
 						try {
 							val clientId = yuul.get("ClientId") as Integer
 							LOGGER.debug("Using YubiKey.ClientID:" + clientId)
 
 							val client = YubicoClient.getClient(clientId)
-							val response = client.verify(otp)
-							val key = YubicoClient.getPublicId(otp)
+							val response = client.verify(entry.otp)
+							val key = YubicoClient.getPublicId(entry.otp)
 							if (response.getStatus() != YubicoResponseStatus.OK) {
 								LOGGER.error(
-									"yubico clientId(" + clientId + ") = key(" + key + ") otp(" + otp + ")=>" +
+									"yubico clientId(" + clientId + ") = key(" + key + ") otp(" + entry.otp + ")=>" +
 										response.getStatus())
 							} else {
-								LOGGER.debug("yubico clientId(" + clientId + ") = key(" + key + ") otp(" + otp + ")=> OK")
+								LOGGER.debug("yubico clientId(" + clientId + ") = key(" + key + ") otp(" + entry.otp + ")=> OK")
 								if (verifyLdap(key)) {
 									LOGGER.info("key "+key+" found in ldap grant access")
 								} else {
@@ -121,10 +121,15 @@ class ProcessOtp {
 			env.put(Context.SECURITY_CREDENTIALS, bindPassword)
 			LOGGER.debug("ldapBindUser:" + bindUser + " ldapBindPassword:" + bindPassword)
 		}
+		LOGGER.debug("starting InitialDirContext")
 		ldapCtx = new InitialDirContext(env)
-		if (!my.alive) {
+		LOGGER.debug("started InitialDirContext")
+		if (!my.isAlive) {
+			LOGGER.debug("starting LDAP-Thread")
 			my.start()
+			LOGGER.debug("started LDAP-Thread")
 		}
+		LOGGER.info("Started")
 	}
 
 }

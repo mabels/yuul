@@ -7,14 +7,13 @@ import javax.smartcardio.CardChannel
 import javax.smartcardio.CommandAPDU
 import javax.smartcardio.ResponseAPDU
 import org.slf4j.LoggerFactory
-import com.adviser.yuul.NfcReaderFactory.NfcReaderService.NfcCallback
 
-class ReadYubiKeyOtp extends NfcCallback {
+class ReadYubiKeyOtp implements NfcCallback {
 	static val LOGGER = LoggerFactory.getLogger(ReadYubiKeyOtp)
 
-	val Queue<String> otpQueue
+	val Queue<OtpTransaction> otpQueue
 
-	new(Queue _otpQueue) {
+	new(Queue<OtpTransaction> _otpQueue) {
 		otpQueue = _otpQueue
 	}
 
@@ -29,7 +28,7 @@ class ReadYubiKeyOtp extends NfcCallback {
 			return send
 		}
 
-		def boolean respond(ResponseAPDU a) {
+		def boolean respond(ResponseAPDU a, OtpTransaction transaction) {
 			return a.SW1 == 0x90 && a.SW2 == 0x00
 		}
 	}
@@ -49,12 +48,13 @@ class ReadYubiKeyOtp extends NfcCallback {
 			return boas.toString.split("/").last
 		}
 
-		override def boolean respond(ResponseAPDU a) {
-			val ret = super.respond(a)
+		override def boolean respond(ResponseAPDU a, OtpTransaction transaction) {
+			val ret = super.respond(a, transaction)
 			if(!ret) {
 				return false
 			}
-			ref.otpQueue.add(getOtp(a))
+			transaction.otp = getOtp(a)
+			ref.otpQueue.add(transaction)
 			return true
 		}
 	}
@@ -67,18 +67,20 @@ class ReadYubiKeyOtp extends NfcCallback {
 
 
 
-	def ResponseAPDU transmit(CardChannel cc, SimpleExcept se) {
+	def ResponseAPDU transmit(CardChannel cc, SimpleExcept se, OtpTransaction transaction) {
 		LOGGER.debug("Send>>" + Yuul.asString(se.send))
 		val data = Yuul.asBytes(se.send)
+		transaction.add("transmit:"+Yuul.asString(se.send))
 		val answer = cc.transmit(new CommandAPDU(data))
 		LOGGER.debug("Recv<<" + Yuul.asString(answer.bytes))
+		transaction.add("receive:"+Yuul.asString(answer.bytes))
 		answer
 	}
 
-	override call(Card card, CardChannel cc) {
-		cmds.forEach [ cmd |
-			val ret = transmit(cc, cmd)
-			if(!cmd.respond(ret)) {
+	override call(Card card, CardChannel cc, OtpTransaction transaction) {
+		cmds.forEach [ cmd|
+			val ret = transmit(cc, cmd, transaction)
+			if(!cmd.respond(ret, transaction)) {
 				LOGGER.error("can not process APDU=" + Yuul.asString(cmd.send))
 				return
 			}
