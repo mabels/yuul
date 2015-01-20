@@ -1,4 +1,4 @@
-package com.adviser.yuul.beans
+package com.adviser.yuul.beans.respond
 
 import org.eclipse.xtend.lib.annotations.Data
 

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration scan="true" scanPeriod="30 seconds" debug="true">
- 	
+
 	<appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
 		<encoder>
 			<pattern>%d{ISO8601} %X{IP} [%thread] %-5level %logger{36} - %msg%n
@@ -8,12 +8,10 @@
 		</encoder>
 	</appender>
 
-	<!-- <logger name="com.adviser" level="DEBUG">
-		<appender-ref ref="STDOUT" />
-	</logger>
- -->
-	<root level="DEBUG">
-		<appender-ref ref="STDOUT" />
-	</root>
- 
- </configuration>
+  <logger name="com.adviser.yuul" level="DEBUG" />
+
+  <root level="INFO">
+    <appender-ref ref="STDOUT" />
+  </root>
+
+</configuration>

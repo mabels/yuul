@@ -1,9 +1,8 @@
 package com.adviser.yuul.web
 
-import java.util.UUID
-import java.util.List
-import org.eclipse.xtend.lib.annotations.Data
 import com.adviser.yuul.beans.Door
+import java.util.List
+import java.util.UUID
 
 class Service {
 	def registerRelais(UUID doorId, String name, String otpKey) {
